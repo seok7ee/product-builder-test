@@ -15,9 +15,13 @@ from __future__ import annotations
 
 from dataclasses import MISSING
 
+from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.utils import configclass
 
 from ...robots import ATLAS_DRC_PRESET, RobotPreset
+from . import mdp
+from .mdp import rewards
+from .mdp.reward_weights import REWARD_WEIGHTS as W
 from .mortar import MortarCfg
 from .wall_planner import WallSpec
 
@@ -72,34 +76,49 @@ class MasonrySimCfg:
 
 
 @configclass
-class MasonryRewardWeights:
-    """Section 5.3 of the plan.
+class MasonryRewardsCfg:
+    """Reward terms bound to their weights (section 5.3 of the plan).
 
-    The two dominant terms are load-bearing:
-    ``release_stable`` (+30) defines what a successful placement means, and
-    ``fall`` (-200) sits an order of magnitude above everything else so that
-    falling is never worth one more brick.
+    Weights are pulled from :data:`REWARD_WEIGHTS` rather than written inline,
+    so the table stays the only place a weight can be changed. Every key in
+    that table must appear here exactly once; ``tests/test_rewards.py`` checks
+    the correspondence, which is what caught two weights that had no term
+    behind them at all.
     """
 
-    reach: float = 1.0
-    grasp: float = 2.0
-    lift: float = 5.0
-    mortar_bed: float = 8.0
-    align: float = 8.0
-    seat_force: float = 6.0
-    joint_thickness: float = 15.0
-    release_stable: float = 30.0
+    # -- manipulation -------------------------------------------------------
+    reach = RewTerm(func=rewards.reach_brick, weight=W["reach"], params={"std": 0.10})
+    grasp = RewTerm(func=rewards.grasp_brick, weight=W["grasp"])
+    lift = RewTerm(func=rewards.lift_brick, weight=W["lift"], params={"min_height": 0.05})
+    mortar_bed = RewTerm(func=rewards.mortar_bed, weight=W["mortar_bed"])
+    align = RewTerm(func=rewards.align_to_slot, weight=W["align"], params={"std": 0.15})
+    seat_force = RewTerm(
+        func=rewards.seat_force, weight=W["seat_force"], params={"lower": 30.0, "upper": 80.0}
+    )
+    joint_thickness = RewTerm(func=rewards.joint_thickness, weight=W["joint_thickness"])
+    release_stable = RewTerm(func=rewards.release_stable, weight=W["release_stable"])
 
-    fall: float = -200.0
-    collapse: float = -50.0
-    com_margin: float = -5.0
-    self_collision: float = -5.0
-    squeeze_out: float = -5.0
-    foot_slip: float = -2.0
-    posture_deviation: float = -0.5
-    excess_force: float = -0.1
-    action_rate: float = -0.01
-    joint_vel: float = -0.01
+    # -- balance ------------------------------------------------------------
+    fall = RewTerm(
+        func=rewards.fall, weight=W["fall"], params={"height_fraction": 0.60, "max_tilt": 0.70}
+    )
+    com_margin = RewTerm(
+        func=rewards.com_margin, weight=W["com_margin"], params={"safe_margin": 0.05}
+    )
+    foot_slip = RewTerm(func=rewards.foot_slip, weight=W["foot_slip"])
+    posture_deviation = RewTerm(func=rewards.posture_deviation, weight=W["posture_deviation"])
+
+    # -- wall integrity -----------------------------------------------------
+    collapse = RewTerm(func=rewards.collapse, weight=W["collapse"], params={"threshold": 0.01})
+    squeeze_out = RewTerm(func=rewards.squeeze_out, weight=W["squeeze_out"])
+
+    # -- effort / safety ----------------------------------------------------
+    excess_force = RewTerm(
+        func=rewards.excess_force, weight=W["excess_force"], params={"limit": 120.0}
+    )
+    self_collision = RewTerm(func=rewards.self_collision, weight=W["self_collision"])
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=W["action_rate"])
+    joint_vel = RewTerm(func=mdp.joint_vel_l2, weight=W["joint_vel"])
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +136,7 @@ class MasonryEnvCfg:
     wall: WallSpec = WallSpec()
     mortar: MortarCfg = MortarCfg()
     sim: MasonrySimCfg = MasonrySimCfg()
-    rewards: MasonryRewardWeights = MasonryRewardWeights()
+    rewards: MasonryRewardsCfg = MasonryRewardsCfg()
 
     # -- scene --------------------------------------------------------------
     num_envs: int = 512

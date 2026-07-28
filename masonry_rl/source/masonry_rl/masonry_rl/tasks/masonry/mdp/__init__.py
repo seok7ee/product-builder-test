@@ -9,4 +9,13 @@ try:  # Isaac Lab built-ins; absent on simulator-free machines
 except ImportError:  # pragma: no cover
     pass
 
-from . import actions, curriculums, events, observations, rewards, terminations  # noqa: F401
+from . import (  # noqa: F401
+    actions,
+    curriculums,
+    events,
+    observations,
+    reward_weights,
+    rewards,
+    rewards_core,
+    terminations,
+)

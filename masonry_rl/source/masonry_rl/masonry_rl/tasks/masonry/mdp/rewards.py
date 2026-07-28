@@ -1,18 +1,12 @@
-"""Reward terms for the masonry task.
+"""Reward terms: thin adapters over :mod:`rewards_core`.
 
-Weights live in ``masonry_env_cfg.py``; this module only defines the shapes of
-the signals. Two invariants from the plan drive the design:
+Each term does two things - fetch state from the environment, then call a pure
+function. The shaping logic lives in ``rewards_core`` where it is unit tested;
+what remains here is plumbing that genuinely needs a running simulator, marked
+with the phase that implements it.
 
-1. ``release_stable`` is the dominant *manipulation* term. Success is "the brick
-   is still there 30 steps after the gripper opened", not "the brick touched the
-   target pose". Rewarding the instant of placement produces walls that fall
-   over.
-2. ``fall`` is the dominant *balance* term and is an order of magnitude larger
-   than anything else. A falling humanoid invalidates the whole episode, so it
-   must not be trade-able against one more brick.
-
-STATUS: signatures are final; bodies marked TODO need the Isaac Lab data API
-verified against the pinned version during P0/P2.
+Weights are not here. They live in :mod:`reward_weights`, which the env config
+turns into ``RewTerm``s, so there is exactly one place a weight can be edited.
 """
 
 from __future__ import annotations
@@ -21,80 +15,124 @@ from typing import TYPE_CHECKING
 
 import torch
 
+from . import rewards_core as core
+
 if TYPE_CHECKING:  # pragma: no cover
     from isaaclab.envs import ManagerBasedRLEnv
 
 
-# -- shaping helpers --------------------------------------------------------
+# ---------------------------------------------------------------------------
+# State access. Everything below this line needs Isaac Sim; everything the
+# terms actually compute does not.
+# ---------------------------------------------------------------------------
 
 
-def _tanh_kernel(distance: torch.Tensor, std: float) -> torch.Tensor:
-    """Standard Isaac Lab shaping: 1 at zero distance, decaying with ``std``."""
-    return 1.0 - torch.tanh(distance / std)
+def _ee_pos(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    raise NotImplementedError("P2: right EE frame position from FrameTransformer")
 
 
-# -- approach and grasp -----------------------------------------------------
+def _target_brick_pos(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    raise NotImplementedError("P2: pose of the brick assigned to the active slot")
+
+
+def _carried_brick(env: "ManagerBasedRLEnv") -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """``(position [E,3], yaw [E], grasped [E] bool)``."""
+    raise NotImplementedError("P2: carried brick pose + grasp state")
+
+
+def _slot_target(env: "ManagerBasedRLEnv") -> tuple[torch.Tensor, torch.Tensor]:
+    """``(position [E,3], yaw [E])`` from ``planner.slot_pose(active_slot)``."""
+    raise NotImplementedError("P2: planner.slot_pose(env.active_slot)")
+
+
+def _seating_force(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    raise NotImplementedError("P2: wrist F/T sensor, normal component [N]")
+
+
+def _balance_state(env: "ManagerBasedRLEnv") -> tuple[torch.Tensor, torch.Tensor]:
+    """``(pelvis_height [E], projected_gravity_z [E])``."""
+    raise NotImplementedError("P2: pelvis root state + body-frame gravity")
+
+
+def _com_and_feet(
+    env: "ManagerBasedRLEnv",
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """``(com_xy [E,2], foot_pos_xy [E,F,2], foot_vel_xy [E,F,2], contact [E,F])``."""
+    raise NotImplementedError("P2: CoM from articulation, feet from contact sensors")
+
+
+def _placed_bricks(env: "ManagerBasedRLEnv") -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """``(pos [E,S,3], reference [E,S,3], placed_mask [E,S])``.
+
+    ``placed_mask`` must exclude the kinematic ``base_courses`` bricks: they
+    cannot move, so including them only dilutes the signal.
+    """
+    raise NotImplementedError("P2: placed brick poses vs their slot targets")
+
+
+def _joint_state(env: "ManagerBasedRLEnv") -> tuple[torch.Tensor, torch.Tensor]:
+    """``(joint_pos [E,J], default_joint_pos [E,J])`` over the preset's groups."""
+    raise NotImplementedError("P2: articulation joint state for the arm/torso groups")
+
+
+def _self_collision_count(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    raise NotImplementedError("P2: self-collision contact count from the sensor")
+
+
+# ---------------------------------------------------------------------------
+# Manipulation
+# ---------------------------------------------------------------------------
 
 
 def reach_brick(env: "ManagerBasedRLEnv", std: float = 0.10) -> torch.Tensor:
-    """Dense approach toward the brick to be picked up."""
-    raise NotImplementedError("P2: distance from right EE frame to target brick")
+    return core.reach_reward(_ee_pos(env), _target_brick_pos(env), std)
 
 
 def grasp_brick(env: "ManagerBasedRLEnv") -> torch.Tensor:
-    """Both fingers in contact and the gripper commanded closed."""
-    raise NotImplementedError("P2: finger contact sensors AND gripper command")
+    """Both fingers in contact *and* the gripper commanded closed."""
+    raise NotImplementedError("P2: finger contact sensors AND gripper action")
 
 
 def lift_brick(env: "ManagerBasedRLEnv", min_height: float = 0.05) -> torch.Tensor:
-    """Constant bonus once the brick clears its rest height."""
     raise NotImplementedError("P2: brick height above its spawn height")
 
 
-# -- mortar -----------------------------------------------------------------
-
-
-def mortar_bed(env: "ManagerBasedRLEnv") -> torch.Tensor:
-    """Bed coverage scaled by how close the deposit is to the target thickness.
-
-    Thin wrapper over :meth:`MortarField.bed_quality` so the reward manager owns
-    only the weight, not the model.
-    """
-    return env.mortar.bed_quality(env.active_slot)
-
-
-def squeeze_out(env: "ManagerBasedRLEnv") -> torch.Tensor:
-    """Penalty (positive magnitude) for mortar displaced beyond the budget."""
-    return env.mortar.squeeze_penalty(env.active_slot)
-
-
-# -- alignment and seating --------------------------------------------------
-
-
 def align_to_slot(env: "ManagerBasedRLEnv", std: float = 0.15) -> torch.Tensor:
-    """Dense alignment of the carried brick with its target slot pose.
-
-    Position kernel plus a yaw term; only active while the brick is grasped, so
-    the policy cannot farm it by hovering an empty gripper over the wall.
-    """
-    raise NotImplementedError("P2: brick pose vs planner.slot_pose(active_slot)")
+    brick_pos, brick_yaw, grasped = _carried_brick(env)
+    slot_pos, slot_yaw = _slot_target(env)
+    return core.align_reward(brick_pos, slot_pos, brick_yaw, slot_yaw, grasped, std)
 
 
 def seat_force(
     env: "ManagerBasedRLEnv", lower: float = 30.0, upper: float = 80.0
 ) -> torch.Tensor:
-    """Reward for keeping the seating force inside the target band [N].
+    return core.force_band(_seating_force(env), lower, upper)
 
-    A band rather than a target: too little and the mortar is not compressed,
-    too much and it squeezes out. Returns 1 inside the band, decaying outside.
-    """
-    raise NotImplementedError("P2: wrist force/torque sensor, normal component")
+
+def excess_force(env: "ManagerBasedRLEnv", limit: float = 120.0) -> torch.Tensor:
+    """Positive magnitude of seating force above ``limit`` [N]."""
+    return core.excess_over(_seating_force(env), limit)
+
+
+# ---------------------------------------------------------------------------
+# Mortar. These are real: the model they delegate to runs on CPU and is tested.
+# ---------------------------------------------------------------------------
+
+
+def mortar_bed(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    """Bed coverage scaled by how close the deposit is to the target thickness."""
+    return env.mortar.bed_quality(env.active_slot)
+
+
+def squeeze_out(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    """Positive magnitude of mortar displaced beyond the budget."""
+    return env.mortar.squeeze_penalty(env.active_slot)
 
 
 def joint_thickness(env: "ManagerBasedRLEnv") -> torch.Tensor:
-    """Reward for a finished joint inside the 8-12 mm acceptance band.
+    """Finished joint inside the 8-12 mm band.
 
-    Second largest manipulation term because joint error accumulates upward:
+    Second largest manipulation term, because joint error accumulates upward:
     a thick joint in course 1 tilts every course above it.
     """
     return env.mortar.joint_ok(env.last_joint_thickness).float()
@@ -103,45 +141,51 @@ def joint_thickness(env: "ManagerBasedRLEnv") -> torch.Tensor:
 def release_stable(env: "ManagerBasedRLEnv") -> torch.Tensor:
     """THE success term: the brick held position after the gripper opened.
 
-    Delegates to the mortar model's cure timer, which only advances while the
-    joint is both bonded and undisturbed.
+    Delegates to the mortar cure timer, which only advances while the joint is
+    both bonded and undisturbed.
     """
     return env.mortar.cured.gather(1, env.active_slot.unsqueeze(1)).squeeze(1).float()
 
 
-# -- wall integrity ---------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Wall integrity
+# ---------------------------------------------------------------------------
 
 
 def collapse(env: "ManagerBasedRLEnv", threshold: float = 0.01) -> torch.Tensor:
-    """Penalty (positive magnitude) when an already-placed brick moves.
-
-    Pre-built ``base_courses`` bricks are kinematic and are excluded.
-    """
-    raise NotImplementedError("P2: displacement of placed bricks vs their slot pose")
+    pos, reference, mask = _placed_bricks(env)
+    return core.collapse_indicator(pos, reference, mask, threshold).float()
 
 
-# -- balance (bipedal specific) ---------------------------------------------
+# ---------------------------------------------------------------------------
+# Balance
+# ---------------------------------------------------------------------------
 
 
-def fall(env: "ManagerBasedRLEnv") -> torch.Tensor:
-    """Fall indicator. Weighted at -200: an order above every other term."""
-    raise NotImplementedError("P2: pelvis height collapse or torso tilt > 40 deg")
+def fall(
+    env: "ManagerBasedRLEnv", height_fraction: float = 0.60, max_tilt: float = 0.70
+) -> torch.Tensor:
+    """Fall indicator. Weighted at -200, an order above every other term."""
+    height, gravity_z = _balance_state(env)
+    nominal = env.cfg.robot.nominal_pelvis_height
+    return core.fall_indicator(height, nominal, gravity_z, height_fraction, max_tilt).float()
 
 
 def com_margin(env: "ManagerBasedRLEnv", safe_margin: float = 0.05) -> torch.Tensor:
-    """Penalty as the CoM ground projection approaches the support polygon edge.
-
-    Support polygon is the convex hull of the contacting feet, so it shrinks
-    automatically when the robot shifts weight.
-    """
-    raise NotImplementedError("P2: CoM projection vs foot contact hull")
+    com_xy, foot_pos, _, contact = _com_and_feet(env)
+    return core.com_margin_penalty(core.support_margin(com_xy, foot_pos, contact), safe_margin)
 
 
 def foot_slip(env: "ManagerBasedRLEnv") -> torch.Tensor:
-    """Horizontal speed of feet that are in contact. Slipping precedes falling."""
-    raise NotImplementedError("P2: foot contact mask * planar foot velocity")
+    _, _, foot_vel, contact = _com_and_feet(env)
+    return core.foot_slip_magnitude(foot_vel, contact)
 
 
 def posture_deviation(env: "ManagerBasedRLEnv") -> torch.Tensor:
-    """Deviation from the nominal pose; suppresses contorted solutions."""
-    raise NotImplementedError("P2: joint_pos - default_joint_pos, L2 over groups")
+    joint_pos, default = _joint_state(env)
+    return core.posture_deviation(joint_pos, default)
+
+
+def self_collision(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    """Number of self-collision contacts this step."""
+    return _self_collision_count(env).float()
