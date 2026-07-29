@@ -11,7 +11,7 @@ import pytest
 from masonry_rl.robots import ATLAS_DRC_PRESET, G1_PRESET, PRESETS, RobotPreset
 
 
-ALL = [ATLAS_DRC_PRESET, G1_PRESET]
+ALL = [ATLAS_DRC_PRESET, G1_PRESET]  # eatlas_approx ships a urdf_path, tested separately
 
 
 @pytest.mark.parametrize("preset", ALL, ids=lambda p: p.name)
@@ -85,7 +85,7 @@ def test_group_lookup_raises_a_useful_error():
 
 
 def test_registry_exposes_both_presets():
-    assert set(PRESETS) == {"atlas_drc", "unitree_g1"}
+    assert set(PRESETS) == {"atlas_drc", "eatlas_approx", "unitree_g1"}
 
 
 def test_simulator_free_import_still_works():
