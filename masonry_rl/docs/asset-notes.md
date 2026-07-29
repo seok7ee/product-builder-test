@@ -89,3 +89,34 @@ third-party geometry is involved.
 Collision geometry stays as convex primitives. Triangle-mesh colliders at
 hundreds of parallel environments are the fastest way to make the scene
 unusable, and URDF has always kept `<visual>` and `<collision>` separate.
+
+## Rigging a supplied mesh
+
+`scripts/rig_static_mesh.py` cuts a single unarticulated humanoid OBJ into
+per-link meshes on the generated skeleton. Nothing is downloaded; you supply
+the file and satisfy yourself its licence permits the use. Outputs land in
+`assets/rigged/`, which is gitignored so a derivative of a licensed mesh is not
+committed by accident.
+
+Two findings from building it, both measured on a round trip through the
+generated model:
+
+**Segment in A-pose, not rest pose.** With the arms hanging at the sides the
+hands sit centimetres from the thighs, and proximity cannot separate them. That
+single ambiguity produced *every* kinematically distant misassignment - 12.2%
+of faces, hands and grippers landing on thighs. Abducting the shoulders 40
+degrees removes it completely: distant errors go to zero. It also matches how
+humanoid models ship.
+
+**Score distance in units of the bone's own girth.** Three metrics were tried:
+
+| metric | exact | stranded on unrelated parts |
+|---|---|---|
+| raw segment distance | 68.8% | limbs eat the trunk |
+| distance minus radius | 60.5% | fat bones win everywhere |
+| distance / radius (kept) | 72.6% | 0% in A-pose |
+
+The residual ~27% is joint-collar geometry assigned to the neighbour across the
+joint. That is ambiguous by construction - a collar spanning the knee belongs
+to thigh and shank equally - so the test asserts *no face lands on an unrelated
+body part* rather than chasing an exact-match percentage.

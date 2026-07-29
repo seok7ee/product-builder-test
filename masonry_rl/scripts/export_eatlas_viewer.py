@@ -23,78 +23,22 @@ from masonry_rl.robots.eatlas_approx import EAtlasSpec, build_model  # noqa: E40
 from masonry_rl.robots.meshes import link_mesh  # noqa: E402
 from masonry_rl.tasks.masonry.wall_planner import WallPlanner, WallSpec  # noqa: E402
 
-Vec = tuple[float, float, float]
-Mat = tuple[Vec, Vec, Vec]
-
-IDENTITY: Mat = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
-
-
-# ---------------------------------------------------------------------------
-# Minimal linear algebra
-# ---------------------------------------------------------------------------
-
-
-def rot(axis: Vec, angle: float) -> Mat:
-    c, s = math.cos(angle), math.sin(angle)
-    ax, ay, az = axis
-    if ax:
-        return ((1, 0, 0), (0, c, -s), (0, s, c))
-    if ay:
-        return ((c, 0, s), (0, 1, 0), (-s, 0, c))
-    if az:
-        return ((c, -s, 0), (s, c, 0), (0, 0, 1))
-    return IDENTITY
-
-
-def matmul(a: Mat, b: Mat) -> Mat:
-    return tuple(  # type: ignore[return-value]
-        tuple(sum(a[i][k] * b[k][j] for k in range(3)) for j in range(3)) for i in range(3)
-    )
-
-
-def apply(m: Mat, v: Vec) -> Vec:
-    return tuple(sum(m[i][k] * v[k] for k in range(3)) for i in range(3))  # type: ignore
-
-
-def add(a: Vec, b: Vec) -> Vec:
-    return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
-
-
-def sub(a: Vec, b: Vec) -> Vec:
-    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
-
-
-def norm(v: Vec) -> float:
-    return math.sqrt(sum(c * c for c in v))
+from masonry_rl.robots.kinematics import (  # noqa: E402
+    IDENTITY,
+    Mat,
+    Vec,
+    add,
+    apply,
+    forward_kinematics,
+    matmul,
+    norm,
+    rot,
+    sub,
+)
 
 
 def clamp(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
-
-
-# ---------------------------------------------------------------------------
-# Forward kinematics
-# ---------------------------------------------------------------------------
-
-
-def forward_kinematics(joints, q: dict[str, float], pelvis_z: float):
-    """World pose of every link. ``q`` maps joint name to angle (radians)."""
-    frames: dict[str, tuple[Vec, Mat]] = {"pelvis": ((0.0, 0.0, pelvis_z), IDENTITY)}
-    pending = list(joints)
-    while pending:
-        progressed = False
-        for j in list(pending):
-            if j.parent not in frames:
-                continue
-            p_pos, p_rot = frames[j.parent]
-            pos = add(p_pos, apply(p_rot, j.origin))
-            local = IDENTITY if j.jtype == "fixed" else rot(j.axis, q.get(j.name, 0.0))
-            frames[j.child] = (pos, matmul(p_rot, local))
-            pending.remove(j)
-            progressed = True
-        if not progressed:
-            raise RuntimeError("disconnected kinematic tree")
-    return frames
 
 
 # ---------------------------------------------------------------------------
