@@ -62,3 +62,30 @@ touch, and the failure would show up only as a success rate that never climbs.
 
 - [ ] revisit if Boston Dynamics publishes an official asset or spec sheet
 - [ ] replace estimated inertias and joint limits if real data appears
+
+## Why the visual meshes are generated, not sourced
+
+Stock Atlas models on 3D marketplaces were considered and rejected on two
+grounds.
+
+**Licence.** 3DModels.org's product licence states you "may not modify, copy,
+reproduce, distribute or use the content for any purpose without prior written
+consent", and warns that a model "may contain third party copyrights or
+trademarks" whose use must be agreed with the owners. Committing such a mesh
+into this repository is redistribution, and the trademark position on a
+likeness of a real commercial robot is not ours to assume. Other marketplaces
+carry comparable terms.
+
+**It would not work anyway.** A stock visual model is one unarticulated shell.
+A URDF needs the body cut into ~30 links with joint frames defined between
+them, which is manual work in a 3D tool, not something a mesh download saves.
+
+So `masonry_rl.robots.meshes` generates the visual geometry from the same spec
+that generates the kinematics, informed only by *published descriptions* of the
+design language (circular head with integrated lights, deliberately simplified
+part count, mostly fully rotational joints - hence the actuator barrels). No
+third-party geometry is involved.
+
+Collision geometry stays as convex primitives. Triangle-mesh colliders at
+hundreds of parallel environments are the fastest way to make the scene
+unusable, and URDF has always kept `<visual>` and `<collision>` separate.

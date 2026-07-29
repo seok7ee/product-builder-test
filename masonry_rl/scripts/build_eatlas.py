@@ -20,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "source" / "masonry_rl"))
 
+from masonry_rl.robots.meshes import link_mesh, to_obj  # noqa: E402
 from masonry_rl.robots.eatlas_approx import (  # noqa: E402
     EAtlasSpec,
     build_model,
@@ -144,6 +145,8 @@ def main() -> int:
     p.add_argument("--span", type=float, default=2.30)
     p.add_argument("--hand", choices=("parallel", "five_finger"), default="parallel")
     p.add_argument("--out-dir", default=str(ROOT / "assets"))
+    p.add_argument("--no-meshes", action="store_true",
+                   help="emit primitive visuals instead of generated OBJ meshes")
     args = p.parse_args()
 
     spec = EAtlasSpec(height=args.height, mass=args.mass, span=args.span, hand=args.hand)
@@ -152,7 +155,20 @@ def main() -> int:
 
     urdf_path = out / "eatlas_approx.urdf"
     svg_path = out / "eatlas_approx.svg"
-    urdf_path.write_text(build_urdf(spec))
+
+    faces = 0
+    if args.no_meshes:
+        urdf_path.write_text(build_urdf(spec))
+    else:
+        mesh_dir = out / "meshes"
+        mesh_dir.mkdir(exist_ok=True)
+        for link in build_model(spec)[0]:
+            if link.geom == "none":
+                continue
+            mesh = link_mesh(link)
+            faces += len(mesh.faces)
+            (mesh_dir / f"{link.name}.obj").write_text(to_obj(mesh, link.name))
+        urdf_path.write_text(build_urdf(spec, mesh_prefix="meshes/"))
     svg_path.write_text(render_svg(spec))
 
     r = geometry_report(spec)
@@ -165,6 +181,8 @@ def main() -> int:
     print(f"  DoF     {int(r['dof']):6d}   {'56' if args.hand == 'five_finger' else '34':>8}")
     print(f"\n  single-arm reach {r['arm_reach']:.3f} m   (the 2.3 m figure is span)")
     print(f"  links {int(r['num_links'])}, feet on z={r['foot_bottom']:+.4f}")
+    if faces:
+        print(f"  visual meshes: {faces} faces in {out / 'meshes'}")
     print(f"\n  {urdf_path}\n  {svg_path}")
     return 0
 

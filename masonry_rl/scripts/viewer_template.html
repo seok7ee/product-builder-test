@@ -260,30 +260,11 @@ function fk(q, pelvisZ) {
   return frames;
 }
 
-/* ---------- meshes: every link is a prism ---------- */
-function prism(link) {
-  const sides = link.geom === "box" ? 4 : 10;
-  const [ox, oy, oz] = link.origin;
-  let section, half;
-  if (link.geom === "box") {
-    const [x, y, z] = link.size; half = z / 2;
-    section = [[x/2, y/2], [-x/2, y/2], [-x/2, -y/2], [x/2, -y/2]];
-  } else {
-    const [r, h] = link.size; half = h / 2;
-    section = Array.from({ length: sides }, (_, i) => {
-      const t = (i / sides) * Math.PI * 2;
-      return [Math.cos(t) * r, Math.sin(t) * r];
-    });
-  }
-  const top = section.map(([a, b]) => [a + ox, b + oy, half + oz]);
-  const bot = section.map(([a, b]) => [a + ox, b + oy, -half + oz]);
-  const faces = [top, bot.slice().reverse()];
-  for (let i = 0; i < section.length; i++) {
-    const k = (i + 1) % section.length;
-    faces.push([bot[i], bot[k], top[k], top[i]]);
-  }
-  return faces;
-}
+/* ---------- link meshes ---------- */
+/* Generated in Python and shipped as vertices plus face indices: the browser
+   renders exactly the geometry the OBJ files carry, so the viewer and the
+   URDF cannot drift apart. */
+const linkFaces = link => link.f.map(face => face.map(i => link.v[i]));
 
 function boxFaces(center, dims, yaw) {
   const [w, d, h] = dims;
@@ -367,7 +348,7 @@ function draw() {
     const fr = frames[link.name];
     if (!fr) continue;
     const rgb = GROUP[link.group] || GROUP.trunk;
-    for (const face of prism(link)) push(face.map(v => addv(fr.p, ap(fr.R, v))), rgb, 1);
+    for (const face of linkFaces(link)) push(face.map(v => addv(fr.p, ap(fr.R, v))), rgb, 1);
   }
 
   if (state.wall) {
@@ -390,9 +371,8 @@ function draw() {
     ctx.closePath();
     ctx.fillStyle = poly.fill;
     ctx.fill();
-    ctx.strokeStyle = poly.stroke || "rgba(0,0,0,.20)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    if (poly.stroke) { ctx.strokeStyle = poly.stroke; ctx.lineWidth = 1; ctx.stroke(); }
+    else { ctx.strokeStyle = poly.fill; ctx.lineWidth = 0.6; ctx.stroke(); }
   }
 
   if (state.reach) drawReach(proj, frames);

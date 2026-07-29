@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "source" / "masonry_rl"))
 
 from masonry_rl.robots.eatlas_approx import EAtlasSpec, build_model  # noqa: E402
+from masonry_rl.robots.meshes import link_mesh  # noqa: E402
 from masonry_rl.tasks.masonry.wall_planner import WallPlanner, WallSpec  # noqa: E402
 
 Vec = tuple[float, float, float]
@@ -266,6 +267,22 @@ def _group(name: str) -> str:
     return "trunk"
 
 
+def _link_payload(link) -> dict:
+    """Ship the generated visual mesh, not the collision primitive.
+
+    Vertices are rounded to a tenth of a millimetre; at this scale that is well
+    below anything visible and it roughly halves the payload.
+    """
+    mesh = link_mesh(link)
+    return {
+        "name": link.name,
+        "group": _group(link.name),
+        "mass": round(link.mass, 4),
+        "v": [[round(c, 4) for c in v] for v in mesh.vertices],
+        "f": [list(f) for f in mesh.faces],
+    }
+
+
 def export(spec: EAtlasSpec) -> dict:
     links, joints = build_model(spec)
     scenes = [solve_scene(spec, joints, n) for n in (12, 6, 3, 0)]
@@ -280,18 +297,7 @@ def export(spec: EAtlasSpec) -> dict:
             "hand": spec.hand,
             "dof": sum(1 for j in joints if j.jtype != "fixed"),
         },
-        "links": [
-            {
-                "name": l.name,
-                "geom": l.geom,
-                "size": list(l.size),
-                "origin": list(l.origin),
-                "mass": round(l.mass, 4),
-                "group": _group(l.name),
-            }
-            for l in links
-            if l.geom != "none"
-        ],
+        "links": [_link_payload(l) for l in links if l.geom != "none"],
         "joints": [
             {
                 "name": j.name,
@@ -319,8 +325,9 @@ def main() -> int:
     data = export(spec)
     Path(args.out).write_text(json.dumps(data, separators=(",", ":")))
 
+    faces = sum(len(l["f"]) for l in data["links"])
     print(f"links {len(data['links'])}  joints {len(data['joints'])}  "
-          f"dof {data['spec']['dof']}")
+          f"dof {data['spec']['dof']}  mesh faces {faces}")
     print("\n  base   work plane   pelvis   squat    waist   reach err  posture")
     for s in data["scenes"]:
         posture = "OK" if s["reachable"] else "OUT OF REACH"

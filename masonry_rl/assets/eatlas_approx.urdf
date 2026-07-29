@@ -18,10 +18,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.16567411" iyy="0.07794128" izz="0.18968845" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 0.000000" rpy="0 0 0" />
       <geometry>
-        <box size="0.220000 0.362900 0.160000" />
+        <mesh filename="meshes/pelvis.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 0.000000" rpy="0 0 0" />
@@ -58,10 +58,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.86580252" iyy="0.74783734" izz="0.42130423" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 0.258600" rpy="0 0 0" />
       <geometry>
-        <box size="0.240000 0.320000 0.475824" />
+        <mesh filename="meshes/torso.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 0.258600" rpy="0 0 0" />
@@ -98,10 +98,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.04445946" iyy="0.04854493" izz="0.03484661" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 0.195800" rpy="0 0 0" />
       <geometry>
-        <box size="0.180000 0.160000 0.220000" />
+        <mesh filename="meshes/head.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 0.195800" rpy="0 0 0" />
@@ -138,10 +138,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.03221072" iyy="0.03221072" izz="0.00376949" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.191062" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.055000" length="0.382124" />
+        <mesh filename="meshes/l_upper_arm.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.191062" rpy="0 0 0" />
@@ -157,10 +157,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.01149748" iyy="0.01149748" izz="0.00164059" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.149974" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.048000" length="0.299947" />
+        <mesh filename="meshes/l_forearm.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.149974" rpy="0 0 0" />
@@ -197,10 +197,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00255142" iyy="0.00230220" izz="0.00047174" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.110939" rpy="0 0 0" />
       <geometry>
-        <box size="0.050000 0.090000 0.221879" />
+        <mesh filename="meshes/l_hand.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.110939" rpy="0 0 0" />
@@ -216,10 +216,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00012609" iyy="0.00012609" izz="0.00001187" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
       <geometry>
-        <box size="0.020000 0.020000 0.090000" />
+        <mesh filename="meshes/l_gripper_0.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
@@ -235,10 +235,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00012609" iyy="0.00012609" izz="0.00001187" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
       <geometry>
-        <box size="0.020000 0.020000 0.090000" />
+        <mesh filename="meshes/l_gripper_1.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
@@ -275,10 +275,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.03221072" iyy="0.03221072" izz="0.00376949" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.191062" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.055000" length="0.382124" />
+        <mesh filename="meshes/r_upper_arm.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.191062" rpy="0 0 0" />
@@ -294,10 +294,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.01149748" iyy="0.01149748" izz="0.00164059" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.149974" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.048000" length="0.299947" />
+        <mesh filename="meshes/r_forearm.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.149974" rpy="0 0 0" />
@@ -334,10 +334,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00255142" iyy="0.00230220" izz="0.00047174" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.110939" rpy="0 0 0" />
       <geometry>
-        <box size="0.050000 0.090000 0.221879" />
+        <mesh filename="meshes/r_hand.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.110939" rpy="0 0 0" />
@@ -353,10 +353,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00012609" iyy="0.00012609" izz="0.00001187" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
       <geometry>
-        <box size="0.020000 0.020000 0.090000" />
+        <mesh filename="meshes/r_gripper_0.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
@@ -372,10 +372,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00012609" iyy="0.00012609" izz="0.00001187" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
       <geometry>
-        <box size="0.020000 0.020000 0.090000" />
+        <mesh filename="meshes/r_gripper_1.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.045000" rpy="0 0 0" />
@@ -412,10 +412,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.17324301" iyy="0.17324301" izz="0.02503348" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.232750" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.075000" length="0.465500" />
+        <mesh filename="meshes/l_thigh.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.232750" rpy="0 0 0" />
@@ -431,10 +431,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.07907405" iyy="0.07907405" izz="0.00744996" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.233700" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.060000" length="0.467400" />
+        <mesh filename="meshes/l_shank.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.233700" rpy="0 0 0" />
@@ -464,10 +464,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00189191" iyy="0.00956090" izz="0.01027173" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.051984 0.000000 -0.037050" rpy="0 0 0" />
       <geometry>
-        <box size="0.288800 0.110000 0.074100" />
+        <mesh filename="meshes/l_foot.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.051984 0.000000 -0.037050" rpy="0 0 0" />
@@ -504,10 +504,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.17324301" iyy="0.17324301" izz="0.02503348" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.232750" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.075000" length="0.465500" />
+        <mesh filename="meshes/r_thigh.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.232750" rpy="0 0 0" />
@@ -523,10 +523,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.07907405" iyy="0.07907405" izz="0.00744996" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.000000 0.000000 -0.233700" rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.060000" length="0.467400" />
+        <mesh filename="meshes/r_shank.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.000000 0.000000 -0.233700" rpy="0 0 0" />
@@ -556,10 +556,10 @@ height 1.90 m | mass 90.0 kg | span 2.30 m | single-arm reach 0.90 m
       <inertia ixx="0.00189191" iyy="0.00956090" izz="0.01027173" ixy="0" ixz="0" iyz="0" />
     </inertial>
     <visual>
-      <origin xyz="0.051984 0.000000 -0.037050" rpy="0 0 0" />
       <geometry>
-        <box size="0.288800 0.110000 0.074100" />
+        <mesh filename="meshes/r_foot.obj" />
       </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </visual>
     <collision>
       <origin xyz="0.051984 0.000000 -0.037050" rpy="0 0 0" />
