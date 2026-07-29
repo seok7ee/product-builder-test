@@ -1,0 +1,557 @@
+<title>eatlas_approx — generated humanoid inspector</title>
+<style>
+  :root {
+    --ground: #eceef0;
+    --surface: #ffffff;
+    --surface-2: #f5f6f7;
+    --line: #d5dade;
+    --ink: #14181c;
+    --muted: #5d666e;
+    --brick: #b4492f;
+    --brick-soft: #d8836d;
+    --ok: #2f7d63;
+    --warn: #b06f1c;
+    --shadow: 0 1px 2px rgba(16, 22, 28, .06), 0 8px 24px -12px rgba(16, 22, 28, .18);
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #101317;
+      --surface: #191e23;
+      --surface-2: #21272d;
+      --line: #2d353c;
+      --ink: #e3e7ea;
+      --muted: #8d979f;
+      --brick: #d4644a;
+      --brick-soft: #8f4130;
+      --ok: #4faa88;
+      --warn: #d09340;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -16px rgba(0, 0, 0, .7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101317; --surface: #191e23; --surface-2: #21272d; --line: #2d353c;
+    --ink: #e3e7ea; --muted: #8d979f; --brick: #d4644a; --brick-soft: #8f4130;
+    --ok: #4faa88; --warn: #d09340;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.7);
+  }
+  :root[data-theme="light"] {
+    --ground: #eceef0; --surface: #ffffff; --surface-2: #f5f6f7; --line: #d5dade;
+    --ink: #14181c; --muted: #5d666e; --brick: #b4492f; --brick-soft: #d8836d;
+    --ok: #2f7d63; --warn: #b06f1c;
+    --shadow: 0 1px 2px rgba(16,22,28,.06), 0 8px 24px -12px rgba(16,22,28,.18);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 20px 20px 40px; }
+
+  /* -- spec plate header ------------------------------------------------ */
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 16px; margin-bottom: 6px; }
+  h1 {
+    font-family: var(--mono); font-size: 1.18rem; font-weight: 600;
+    letter-spacing: -.01em; margin: 0; text-wrap: balance;
+  }
+  .sub { color: var(--muted); font-size: .86rem; }
+  .chip {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .09em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 3px;
+    border: 1px solid var(--brick); color: var(--brick); white-space: nowrap;
+  }
+  .notice {
+    margin: 12px 0 18px; padding: 10px 13px; border-left: 3px solid var(--brick);
+    background: var(--surface-2); border-radius: 0 4px 4px 0;
+    font-size: .82rem; color: var(--muted);
+  }
+  .notice strong { color: var(--ink); font-weight: 600; }
+
+  /* -- layout ----------------------------------------------------------- */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 6px; box-shadow: var(--shadow);
+  }
+  .viewport { position: relative; overflow: hidden; }
+  canvas { display: block; width: 100%; height: auto; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .hint {
+    position: absolute; left: 12px; bottom: 10px; font-family: var(--mono);
+    font-size: .68rem; color: var(--muted); pointer-events: none;
+    letter-spacing: .04em;
+  }
+
+  .rail { display: flex; flex-direction: column; gap: 14px; }
+  .block { padding: 14px; }
+  .label {
+    font-family: var(--mono); font-size: .66rem; letter-spacing: .11em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 9px;
+  }
+
+  dl.spec { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; margin: 0; font-size: .82rem; }
+  dl.spec dt { color: var(--muted); }
+  dl.spec dd {
+    margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right;
+  }
+
+  .courses { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .courses button {
+    font-family: var(--mono); font-size: .95rem; padding: 9px 0;
+    background: var(--surface-2); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 4px; cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .courses button:hover { border-color: var(--brick-soft); }
+  .courses button[aria-pressed="true"] {
+    background: var(--brick); border-color: var(--brick); color: #fff;
+  }
+  .courses button:focus-visible,
+  .toggle:focus-visible, .reset:focus-visible { outline: 2px solid var(--brick); outline-offset: 2px; }
+  .courses-note { font-size: .74rem; color: var(--muted); margin: 8px 0 0; }
+
+  /* -- posture meters --------------------------------------------------- */
+  .meter { margin-top: 11px; }
+  .meter-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: .78rem; margin-bottom: 4px;
+  }
+  .meter-head span:last-child {
+    font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--muted);
+  }
+  .track { height: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .fill { height: 100%; width: 0; transition: width .35s cubic-bezier(.4, 0, .2, 1); }
+  .fill.ok { background: var(--ok); }
+  .fill.warn { background: var(--warn); }
+  .fill.max { background: var(--brick); }
+  .verdict { margin: 12px 0 0; font-size: .78rem; color: var(--muted); }
+  .verdict b { color: var(--ink); font-weight: 600; }
+
+  .toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+  .toggle, .reset {
+    font-family: var(--mono); font-size: .7rem; letter-spacing: .04em;
+    padding: 6px 9px; border-radius: 4px; cursor: pointer;
+    background: var(--surface-2); color: var(--muted);
+    border: 1px solid var(--line);
+  }
+  .toggle[aria-pressed="true"] { color: var(--ink); border-color: var(--brick-soft); }
+
+  footer { margin-top: 22px; font-size: .76rem; color: var(--muted); }
+  footer code { font-family: var(--mono); font-size: .95em; }
+  @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>eatlas_approx</h1>
+    <span class="chip">Unofficial approximation</span>
+    <span class="sub">generated humanoid · masonry RL bring-up</span>
+  </header>
+
+  <p class="notice">
+    <strong>Not a Boston Dynamics asset.</strong> No public URDF or USD exists for the electric
+    Atlas. This model is generated from published figures — 1.9 m, 90 kg, 56 DoF, 2.3 m span —
+    with segment lengths and masses from Winter's anthropometric tables. Link shapes are
+    primitives; inertias and joint limits are estimates. Good for workspace, reach and balance
+    bring-up. Not a source of Atlas results.
+  </p>
+
+  <div class="grid">
+    <div class="panel viewport">
+      <canvas id="view" width="1360" height="1020"></canvas>
+      <div class="hint">drag to orbit · scroll to zoom</div>
+    </div>
+
+    <div class="rail">
+      <div class="panel block">
+        <p class="label">Working height</p>
+        <div class="courses" id="courses" role="group" aria-label="Pre-built courses"></div>
+        <p class="courses-note">
+          Courses already standing under the wall. Lowering this is the whole height
+          curriculum — and freezing it at 3 is the fallback demo.
+        </p>
+      </div>
+
+      <div class="panel block">
+        <p class="label">Posture demanded</p>
+        <div class="meter">
+          <div class="meter-head"><span>Squat depth</span><span id="squat-val">—</span></div>
+          <div class="track"><div class="fill ok" id="squat-bar"></div></div>
+        </div>
+        <div class="meter">
+          <div class="meter-head"><span>Torso pitch</span><span id="pitch-val">—</span></div>
+          <div class="track"><div class="fill ok" id="pitch-bar"></div></div>
+        </div>
+        <p class="verdict" id="verdict"></p>
+      </div>
+
+      <div class="panel block">
+        <p class="label">Model</p>
+        <dl class="spec">
+          <dt>Height</dt><dd id="s-height">—</dd>
+          <dt>Mass</dt><dd id="s-mass">—</dd>
+          <dt>Span</dt><dd id="s-span">—</dd>
+          <dt>Arm reach</dt><dd id="s-reach">—</dd>
+          <dt>Degrees of freedom</dt><dd id="s-dof">—</dd>
+          <dt>Reach residual</dt><dd id="s-err">—</dd>
+        </dl>
+      </div>
+
+      <div class="panel block">
+        <p class="label">Display</p>
+        <div class="toggles">
+          <button class="toggle" id="t-frames" aria-pressed="false">joint frames</button>
+          <button class="toggle" id="t-wall" aria-pressed="true">wall</button>
+          <button class="toggle" id="t-reach" aria-pressed="false">reach envelope</button>
+          <button class="reset" id="t-reset">reset view</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Generated by <code>scripts/build_eatlas.py</code> and <code>scripts/export_eatlas_viewer.py</code>.
+    Poses are solved and verified in Python against forward kinematics — every configuration
+    shown lands the tool point on the target slot to within a millimetre. The viewer only
+    replays joint angles.
+  </footer>
+</div>
+
+<script>
+const MODEL = __MODEL_JSON__;
+
+/* ---------- small matrix helpers ---------- */
+const rot = (axis, a) => {
+  const c = Math.cos(a), s = Math.sin(a);
+  if (axis[0]) return [[1,0,0],[0,c,-s],[0,s,c]];
+  if (axis[1]) return [[c,0,s],[0,1,0],[-s,0,c]];
+  if (axis[2]) return [[c,-s,0],[s,c,0],[0,0,1]];
+  return [[1,0,0],[0,1,0],[0,0,1]];
+};
+const mul = (a, b) => a.map((r, i) => [0,1,2].map(j => r[0]*b[0][j] + r[1]*b[1][j] + r[2]*b[2][j]));
+const ap = (m, v) => [0,1,2].map(i => m[i][0]*v[0] + m[i][1]*v[1] + m[i][2]*v[2]);
+const addv = (a, b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
+const subv = (a, b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const unit = v => { const n = Math.hypot(...v) || 1; return v.map(c => c/n); };
+const I3 = [[1,0,0],[0,1,0],[0,0,1]];
+
+/* ---------- forward kinematics ---------- */
+function fk(q, pelvisZ) {
+  const frames = { pelvis: { p: [0, 0, pelvisZ], R: I3 } };
+  let pending = MODEL.joints.slice();
+  while (pending.length) {
+    const next = [];
+    for (const j of pending) {
+      const parent = frames[j.parent];
+      if (!parent) { next.push(j); continue; }
+      const local = j.type === "fixed" ? I3 : rot(j.axis, q[j.name] || 0);
+      frames[j.child] = { p: addv(parent.p, ap(parent.R, j.origin)), R: mul(parent.R, local) };
+    }
+    if (next.length === pending.length) break;
+    pending = next;
+  }
+  return frames;
+}
+
+/* ---------- meshes: every link is a prism ---------- */
+function prism(link) {
+  const sides = link.geom === "box" ? 4 : 10;
+  const [ox, oy, oz] = link.origin;
+  let section, half;
+  if (link.geom === "box") {
+    const [x, y, z] = link.size; half = z / 2;
+    section = [[x/2, y/2], [-x/2, y/2], [-x/2, -y/2], [x/2, -y/2]];
+  } else {
+    const [r, h] = link.size; half = h / 2;
+    section = Array.from({ length: sides }, (_, i) => {
+      const t = (i / sides) * Math.PI * 2;
+      return [Math.cos(t) * r, Math.sin(t) * r];
+    });
+  }
+  const top = section.map(([a, b]) => [a + ox, b + oy, half + oz]);
+  const bot = section.map(([a, b]) => [a + ox, b + oy, -half + oz]);
+  const faces = [top, bot.slice().reverse()];
+  for (let i = 0; i < section.length; i++) {
+    const k = (i + 1) % section.length;
+    faces.push([bot[i], bot[k], top[k], top[i]]);
+  }
+  return faces;
+}
+
+function boxFaces(center, dims, yaw) {
+  const [w, d, h] = dims;
+  const R = rot([0,0,1], yaw);
+  const corner = (sx, sy, sz) => addv(center, ap(R, [sx*w/2, sy*d/2, sz*h/2]));
+  const v = [
+    corner(1,1,1), corner(-1,1,1), corner(-1,-1,1), corner(1,-1,1),
+    corner(1,1,-1), corner(-1,1,-1), corner(-1,-1,-1), corner(1,-1,-1),
+  ];
+  return [
+    [v[0],v[1],v[2],v[3]], [v[7],v[6],v[5],v[4]],
+    [v[0],v[3],v[7],v[4]], [v[1],v[0],v[4],v[5]],
+    [v[2],v[1],v[5],v[6]], [v[3],v[2],v[6],v[7]],
+  ];
+}
+
+/* ---------- palette ---------- */
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const GROUP = {
+  trunk: [78, 90, 101], head: [58, 68, 78], arm: [116, 136, 152],
+  hand: [92, 110, 126], leg: [96, 108, 120], foot: [62, 72, 82],
+};
+const shade = (rgb, k) => `rgb(${rgb.map(c => Math.round(Math.min(255, c * k))).join(",")})`;
+
+/* ---------- camera ---------- */
+const cam = { az: -0.72, el: 0.20, dist: 3.5, target: [0.15, 0, 0.85] };
+const DEFAULT_CAM = { ...cam, target: cam.target.slice() };
+
+function project(canvas) {
+  const { az, el, dist, target } = cam;
+  const eye = addv(target, [
+    Math.cos(el) * Math.cos(az) * dist,
+    Math.cos(el) * Math.sin(az) * dist,
+    Math.sin(el) * dist,
+  ]);
+  const fwd = unit(subv(target, eye));
+  const right = unit(cross(fwd, [0, 0, 1]));
+  const up = cross(right, fwd);
+  const f = canvas.height * 1.05;
+  return p => {
+    const r = subv(p, eye);
+    const z = dot(r, fwd);
+    if (z <= 0.05) return null;
+    return [
+      canvas.width / 2 + (dot(r, right) / z) * f,
+      canvas.height / 2 - (dot(r, up) / z) * f,
+      z,
+    ];
+  };
+}
+
+/* ---------- render ---------- */
+const canvas = document.getElementById("view");
+const ctx = canvas.getContext("2d");
+const state = { scene: MODEL.scenes.find(s => s.base_courses === 3), frames: true, wall: true, reach: false };
+state.frames = false;
+
+function draw() {
+  const S = state.scene;
+  const proj = project(canvas);
+  const frames = fk(S.q, S.pelvis_z);
+  const light = unit([-0.45, -0.7, 0.85]);
+
+  ctx.fillStyle = css("--surface");
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawGround(proj);
+
+  const polys = [];
+  const push = (pts, rgb, k, stroke) => {
+    const scr = pts.map(proj);
+    if (scr.some(s => s === null)) return;
+    const n = unit(cross(subv(pts[1], pts[0]), subv(pts[2], pts[0])));
+    const lambert = 0.55 + 0.45 * Math.max(0, dot(n, light));
+    polys.push({
+      scr, depth: scr.reduce((a, s) => a + s[2], 0) / scr.length,
+      fill: shade(rgb, k * lambert), stroke,
+    });
+  };
+
+  for (const link of MODEL.links) {
+    const fr = frames[link.name];
+    if (!fr) continue;
+    const rgb = GROUP[link.group] || GROUP.trunk;
+    for (const face of prism(link)) push(face.map(v => addv(fr.p, ap(fr.R, v))), rgb, 1);
+  }
+
+  if (state.wall) {
+    const yaw = S.wall_yaw, dims = S.brick;
+    for (const p of S.base_bricks) for (const f of boxFaces(p, dims, yaw)) push(f, [150, 132, 116], 1);
+    S.slots.forEach((p, i) => {
+      const active = i === S.active_slot;
+      const rgb = active ? [196, 84, 58] : [150, 82, 66];
+      for (const f of boxFaces(p, dims, yaw)) {
+        if (active) push(f, rgb, 1);
+        else push(f, rgb, 0.42, "rgba(150,82,66,.55)");
+      }
+    });
+  }
+
+  polys.sort((a, b) => b.depth - a.depth);
+  for (const poly of polys) {
+    ctx.beginPath();
+    poly.scr.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.closePath();
+    ctx.fillStyle = poly.fill;
+    ctx.fill();
+    ctx.strokeStyle = poly.stroke || "rgba(0,0,0,.20)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  if (state.reach) drawReach(proj, frames);
+  if (state.frames) drawFrames(proj, frames);
+}
+
+function drawGround(proj) {
+  ctx.strokeStyle = css("--line");
+  ctx.lineWidth = 1;
+  const N = 8, step = 0.25;
+  for (let i = -N; i <= N; i++) {
+    for (const line of [
+      [[i * step, -N * step, 0], [i * step, N * step, 0]],
+      [[-N * step, i * step, 0], [N * step, i * step, 0]],
+    ]) {
+      const a = proj(line[0]), b = proj(line[1]);
+      if (!a || !b) continue;
+      ctx.globalAlpha = i === 0 ? 0.75 : 0.3;
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawFrames(proj, frames) {
+  ctx.fillStyle = css("--brick");
+  for (const j of MODEL.joints) {
+    if (j.type === "fixed") continue;
+    const fr = frames[j.child];
+    if (!fr) continue;
+    const s = proj(fr.p);
+    if (!s) continue;
+    ctx.beginPath(); ctx.arc(s[0], s[1], 3.2, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawReach(proj, frames) {
+  const sh = frames.r_shoulder_pitch_link;
+  if (!sh) return;
+  const r = MODEL.spec.arm_reach;
+  ctx.strokeStyle = css("--brick");
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 1.4;
+  for (const axis of ["xy", "xz", "yz"]) {
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= 72; i++) {
+      const t = (i / 72) * Math.PI * 2;
+      const c = Math.cos(t) * r, s2 = Math.sin(t) * r;
+      const off = axis === "xy" ? [c, s2, 0] : axis === "xz" ? [c, 0, s2] : [0, c, s2];
+      const p = proj(addv(sh.p, off));
+      if (!p) { started = false; continue; }
+      started ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+      started = true;
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- readouts ---------- */
+const fmt = (v, d = 3) => v.toFixed(d);
+function sync() {
+  const S = state.scene, sp = MODEL.spec;
+  document.getElementById("s-height").textContent = fmt(sp.height, 2) + " m";
+  document.getElementById("s-mass").textContent = fmt(sp.mass, 1) + " kg";
+  document.getElementById("s-span").textContent = fmt(sp.span, 2) + " m";
+  document.getElementById("s-reach").textContent = fmt(sp.arm_reach) + " m";
+  document.getElementById("s-dof").textContent = sp.dof;
+  document.getElementById("s-err").textContent = (S.reach_error * 1000).toFixed(2) + " mm";
+
+  const maxSquat = sp.hip_z - MODEL.scenes[MODEL.scenes.length - 1].pelvis_z;
+  const squatPct = Math.min(100, (S.squat_depth / Math.max(maxSquat, 1e-6)) * 100);
+  const pitchDeg = S.waist_pitch * 180 / Math.PI;
+  const pitchPct = Math.min(100, (S.waist_pitch / 1.0) * 100);
+
+  const squatBar = document.getElementById("squat-bar");
+  const pitchBar = document.getElementById("pitch-bar");
+  squatBar.style.width = squatPct + "%";
+  pitchBar.style.width = pitchPct + "%";
+  squatBar.className = "fill " + (squatPct > 97 ? "max" : squatPct > 60 ? "warn" : "ok");
+  pitchBar.className = "fill " + (pitchPct > 70 ? "max" : pitchPct > 30 ? "warn" : "ok");
+
+  document.getElementById("squat-val").textContent =
+    fmt(S.squat_depth, 3) + " m" + (squatPct > 97 ? " · at knee limit" : "");
+  document.getElementById("pitch-val").textContent = pitchDeg.toFixed(1) + "°";
+
+  const v = document.getElementById("verdict");
+  if (S.base_courses === 0) {
+    v.innerHTML = "Floor level pins the knees <b>at their limit</b> and still needs " +
+      pitchDeg.toFixed(0) + "° of forward pitch. Both the deepest squat and the furthest " +
+      "the centre of mass ever travels — the hardest configuration in the project.";
+  } else if (S.base_courses === 3) {
+    v.innerHTML = "The fallback. The squat is <b>just as deep</b> as at floor level — what " +
+      "three pre-built courses actually buy is " + pitchDeg.toFixed(0) + "° of torso pitch " +
+      "instead of 44°, which is where the balance risk lives.";
+  } else if (S.base_courses === 6) {
+    v.innerHTML = "A moderate crouch with the torso <b>upright</b>. Balance is close to " +
+      "nominal standing.";
+  } else {
+    v.innerHTML = "Chest height. Almost no squat, no torso pitch — where the curriculum " +
+      "<b>starts</b>, so manipulation is learned before balance gets hard.";
+  }
+}
+
+/* ---------- controls ---------- */
+const coursesEl = document.getElementById("courses");
+MODEL.scenes.forEach(s => {
+  const b = document.createElement("button");
+  b.textContent = s.base_courses;
+  b.setAttribute("aria-pressed", String(s.base_courses === state.scene.base_courses));
+  b.title = "work plane " + (s.work_plane * 1000).toFixed(0) + " mm";
+  b.addEventListener("click", () => {
+    state.scene = s;
+    [...coursesEl.children].forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    sync(); draw();
+  });
+  coursesEl.appendChild(b);
+});
+
+const toggle = (id, key) => {
+  const el = document.getElementById(id);
+  el.setAttribute("aria-pressed", String(state[key]));
+  el.addEventListener("click", () => {
+    state[key] = !state[key];
+    el.setAttribute("aria-pressed", String(state[key]));
+    draw();
+  });
+};
+toggle("t-frames", "frames");
+toggle("t-wall", "wall");
+toggle("t-reach", "reach");
+document.getElementById("t-reset").addEventListener("click", () => {
+  Object.assign(cam, DEFAULT_CAM, { target: DEFAULT_CAM.target.slice() });
+  draw();
+});
+
+let drag = null;
+canvas.addEventListener("pointerdown", e => {
+  drag = { x: e.clientX, y: e.clientY };
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove", e => {
+  if (!drag) return;
+  cam.az -= (e.clientX - drag.x) * 0.008;
+  cam.el = Math.max(-1.2, Math.min(1.35, cam.el + (e.clientY - drag.y) * 0.006));
+  drag = { x: e.clientX, y: e.clientY };
+  draw();
+});
+for (const ev of ["pointerup", "pointercancel"]) canvas.addEventListener(ev, () => (drag = null));
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  cam.dist = Math.max(1.2, Math.min(8, cam.dist * (1 + Math.sign(e.deltaY) * 0.1)));
+  draw();
+}, { passive: false });
+
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+sync();
+draw();
+</script>
