@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "masonry_rl"
+version = "0.1.0"
+description = "Bricklaying with a bipedal humanoid in Isaac Lab"
+requires-python = ">=3.10"
+dependencies = ["torch"]
+
+[project.optional-dependencies]
+# Isaac Sim / Isaac Lab are installed separately, they are not on PyPI.
+assets = ["robot_descriptions"]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["source/masonry_rl"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
